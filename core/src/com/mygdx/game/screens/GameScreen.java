@@ -4,20 +4,21 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.mygdx.game.CustomAnimation;
 import com.mygdx.game.Main;
 
 public class GameScreen implements Screen {
     private final Main game;
     private final SpriteBatch batch;
-    private final Texture img;
+    private final CustomAnimation animation;
 
     public GameScreen(Main game) {
         this.game = game;
-        batch = new SpriteBatch();
-        img = new Texture("game_img.png");
+        this.batch = new SpriteBatch();
+        animation = new CustomAnimation("", 0, 0, Animation.PlayMode.LOOP);
     }
 
     @Override
@@ -29,8 +30,10 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         ScreenUtils.clear(Color.ORANGE);
 
+        animation.setTime(delta);
+        
         batch.begin();
-        batch.draw(img, 0, 0);
+        batch.draw(animation.getFrame(), 0, 0);
         batch.end();
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY)) {
@@ -62,6 +65,6 @@ public class GameScreen implements Screen {
     @Override
     public void dispose() {
         batch.dispose();
-        img.dispose();
+        animation.dispose();
     }
 }
