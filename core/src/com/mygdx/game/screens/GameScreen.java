@@ -12,7 +12,6 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.mygdx.game.Main;
 
@@ -21,28 +20,31 @@ public class GameScreen implements Screen {
     private final SpriteBatch batch;
 //    private final CustomAnimation animation;
     private final OrthographicCamera camera;
-    private TiledMap map;
-    private OrthogonalTiledMapRenderer mapRenderer;
+    private final OrthogonalTiledMapRenderer mapRenderer;
     private static final float STEP = 2.5f;
-    private Rectangle mapSize;
+    private final TiledMap map;
+    private final Rectangle mapSize;
+    private final RectangleMapObject cameraRectangle;
+    private final ShapeRenderer shapeRenderer;
 
     public GameScreen(Main game) {
         this.game = game;
         this.batch = new SpriteBatch();
-//        animation = new CustomAnimation("", 0, 0, Animation.PlayMode.LOOP);
+//        animation = new CustomAnimation("atlas/black_cat.atlas", 0, 0, Animation.PlayMode.LOOP);
         camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         map = new TmxMapLoader().load("map/map.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(map);
 
-        RectangleMapObject cameraViewRectangle = (RectangleMapObject) map.getLayers().get("объекты").getObjects().get("камера");
+        cameraRectangle = (RectangleMapObject) map.getLayers().get("объекты").getObjects().get("камера");
         mapSize = ((RectangleMapObject) map.getLayers().get("объекты").getObjects().get("граница")).getRectangle();
 
-        camera.position.x = cameraViewRectangle.getRectangle().getX();
+        camera.position.x = cameraRectangle.getRectangle().getX();
 
         camera.viewportHeight = mapSize.getHeight();
         camera.viewportWidth = (camera.viewportHeight * 4) / 3.0f;
-        camera.position.y = mapSize.getHeight() / 2;
+        camera.position.y = mapSize.getY() + mapSize.getHeight() / 2;
+        shapeRenderer = new ShapeRenderer();
     }
 
     @Override
@@ -56,7 +58,7 @@ public class GameScreen implements Screen {
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) && camera.position.x + STEP <= mapSize.getWidth()) {
             camera.position.x += STEP;
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT) && camera.position.x - STEP > 0) {
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT) && camera.position.x - STEP > mapSize.getX()) {
             camera.position.x -= STEP;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.UP) && camera.position.y + STEP < mapSize.getHeight()) {
@@ -72,29 +74,25 @@ public class GameScreen implements Screen {
 
 //        animation.setTime(delta);
 
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
-//        batch.draw(animation.getFrame(), 0, 0);
-        batch.end();
-
         mapRenderer.setView(camera);
         mapRenderer.render();
+
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+//        batch.draw(animation.getFrame(), mapSize.getX(), mapSize.getY());
+        batch.end();
+
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             dispose();
             game.setScreen(new MenuScreen(game));
         }
 
-//        shapeRenderer.setProjectionMatrix(camera.combined);
-//        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-//        shapeRenderer.setColor(Color.GOLD);
-//        shapeRenderer.rect(mapSize.getX(), mapSize.getY(), mapSize.getWidth(), mapSize.getHeight());
-//        shapeRenderer.end();
-
-        /*
-         * Для отладки
-         */
-        Gdx.graphics.setTitle("x = " + camera.position.x);
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.GOLD);
+        shapeRenderer.rect(mapSize.getX(), mapSize.getY(), mapSize.getWidth(), mapSize.getHeight());
+        shapeRenderer.end();
     }
 
     @Override
@@ -121,6 +119,7 @@ public class GameScreen implements Screen {
     @Override
     public void dispose() {
         batch.dispose();
+        map.dispose();
 //        animation.dispose();
     }
 }

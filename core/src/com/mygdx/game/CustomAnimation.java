@@ -10,8 +10,8 @@ public class CustomAnimation {
     private final TextureAtlas atlas;
     private final Animation<TextureAtlas.AtlasRegion> animation;
     private float time;
-    public CustomAnimation(String name, int col, int row, Animation.PlayMode playMode) {
-        atlas = new TextureAtlas("atlas/black_cat.atlas");
+    public CustomAnimation(String path, int col, int row, Animation.PlayMode playMode) {
+        atlas = new TextureAtlas(path);
         animation = new Animation<>(1 / 24f, atlas.findRegions("fast-run"));
         animation.setPlayMode(playMode);
 
