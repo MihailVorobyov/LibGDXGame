@@ -4,21 +4,47 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.mygdx.game.CustomAnimation;
 import com.mygdx.game.Main;
 
 public class GameScreen implements Screen {
     private final Main game;
     private final SpriteBatch batch;
-    private final CustomAnimation animation;
+//    private final CustomAnimation animation;
+    private final OrthographicCamera camera;
+    private final OrthogonalTiledMapRenderer mapRenderer;
+    private static final float STEP = 2.5f;
+    private final TiledMap map;
+    private final Rectangle mapSize;
+    private final RectangleMapObject cameraRectangle;
+    private final ShapeRenderer shapeRenderer;
 
     public GameScreen(Main game) {
         this.game = game;
         this.batch = new SpriteBatch();
-        animation = new CustomAnimation("", 0, 0, Animation.PlayMode.LOOP);
+//        animation = new CustomAnimation("atlas/black_cat.atlas", 0, 0, Animation.PlayMode.LOOP);
+        camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        map = new TmxMapLoader().load("map/map.tmx");
+        mapRenderer = new OrthogonalTiledMapRenderer(map);
+
+        cameraRectangle = (RectangleMapObject) map.getLayers().get("объекты").getObjects().get("камера");
+        mapSize = ((RectangleMapObject) map.getLayers().get("объекты").getObjects().get("граница")).getRectangle();
+
+        camera.position.x = cameraRectangle.getRectangle().getX();
+
+        camera.viewportHeight = mapSize.getHeight();
+        camera.viewportWidth = (camera.viewportHeight * 4) / 3.0f;
+        camera.position.y = mapSize.getY() + mapSize.getHeight() / 2;
+        shapeRenderer = new ShapeRenderer();
     }
 
     @Override
@@ -28,23 +54,51 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        ScreenUtils.clear(Color.ORANGE);
 
-        animation.setTime(delta);
-        
+        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) && camera.position.x + STEP <= mapSize.getWidth()) {
+            camera.position.x += STEP;
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT) && camera.position.x - STEP > mapSize.getX()) {
+            camera.position.x -= STEP;
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.UP) && camera.position.y + STEP < mapSize.getHeight()) {
+            camera.position.y += STEP;
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.DOWN) && camera.position.y - STEP > 0) {
+            camera.position.y -= STEP;
+        }
+
+        camera.zoom = mapSize.getHeight() / Gdx.graphics.getHeight();
+        camera.update();
+        ScreenUtils.clear(Color.BLACK);
+
+//        animation.setTime(delta);
+
+        mapRenderer.setView(camera);
+        mapRenderer.render();
+
+        batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        batch.draw(animation.getFrame(), 0, 0);
+//        batch.draw(animation.getFrame(), mapSize.getX(), mapSize.getY());
         batch.end();
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY)) {
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             dispose();
             game.setScreen(new MenuScreen(game));
         }
+
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.GOLD);
+        shapeRenderer.rect(mapSize.getX(), mapSize.getY(), mapSize.getWidth(), mapSize.getHeight());
+        shapeRenderer.end();
     }
 
     @Override
     public void resize(int width, int height) {
-
+        camera.viewportWidth = width;
+        camera.viewportHeight = height;
     }
 
     @Override
@@ -65,6 +119,7 @@ public class GameScreen implements Screen {
     @Override
     public void dispose() {
         batch.dispose();
-        animation.dispose();
+        map.dispose();
+//        animation.dispose();
     }
 }
