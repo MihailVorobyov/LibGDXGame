@@ -12,6 +12,7 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.mygdx.game.Main;
 
@@ -26,6 +27,9 @@ public class GameScreen implements Screen {
     private final Rectangle mapSize;
     private final RectangleMapObject cameraRectangle;
     private final ShapeRenderer shapeRenderer;
+    private final int[] bg;
+    private final int[] l1;
+    private final Array<RectangleMapObject> impediments;
 
     public GameScreen(Main game) {
         this.game = game;
@@ -35,6 +39,12 @@ public class GameScreen implements Screen {
 
         map = new TmxMapLoader().load("map/map.tmx");
         mapRenderer = new OrthogonalTiledMapRenderer(map);
+
+        bg = new int[1];
+        bg[0] = map.getLayers().getIndex("фон");
+        l1 = new int[1];
+        l1[0] = map.getLayers().getIndex("трава");
+        impediments = map.getLayers().get("препятствия").getObjects().getByType(RectangleMapObject.class);
 
         cameraRectangle = (RectangleMapObject) map.getLayers().get("объекты").getObjects().get("камера");
         mapSize = ((RectangleMapObject) map.getLayers().get("объекты").getObjects().get("граница")).getRectangle();
@@ -55,16 +65,16 @@ public class GameScreen implements Screen {
     @Override
     public void render(float delta) {
 
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) && camera.position.x + STEP <= mapSize.getWidth()) {
+        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
             camera.position.x += STEP;
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT) && camera.position.x - STEP > mapSize.getX()) {
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
             camera.position.x -= STEP;
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.UP) && camera.position.y + STEP < mapSize.getHeight()) {
+        if (Gdx.input.isKeyPressed(Input.Keys.UP) ) {
             camera.position.y += STEP;
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN) && camera.position.y - STEP > 0) {
+        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
             camera.position.y -= STEP;
         }
 
@@ -75,7 +85,7 @@ public class GameScreen implements Screen {
 //        animation.setTime(delta);
 
         mapRenderer.setView(camera);
-        mapRenderer.render();
+        mapRenderer.render(bg);
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
@@ -91,8 +101,14 @@ public class GameScreen implements Screen {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.GOLD);
+        for (RectangleMapObject o : impediments) {
+            Rectangle mapObject = o.getRectangle();
+            shapeRenderer.rect(mapObject.getX(), mapObject.getY(), mapObject.getWidth(), mapObject.getHeight());
+        }
         shapeRenderer.rect(mapSize.getX(), mapSize.getY(), mapSize.getWidth(), mapSize.getHeight());
         shapeRenderer.end();
+
+        mapRenderer.render(l1);
     }
 
     @Override
