@@ -1,0 +1,27 @@
+
+skeleton.png
+size: 32, 128
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+t1
+  rotate: false
+  xy: 2, 36
+  size: 24, 32
+  orig: 24, 32
+  offset: 0, 0
+  index: -1
+t2
+  rotate: false
+  xy: 2, 70
+  size: 24, 32
+  orig: 24, 32
+  offset: 0, 0
+  index: -1
+t3
+  rotate: false
+  xy: 2, 2
+  size: 24, 32
+  orig: 24, 32
+  offset: 0, 0
+  index: -1

@@ -12,7 +12,7 @@ public class CustomAnimation {
     private float time;
     public CustomAnimation(String path, int col, int row, Animation.PlayMode playMode) {
         atlas = new TextureAtlas(path);
-        animation = new Animation<>(1 / 24f, atlas.findRegions("fast-run"));
+        animation = new Animation<>(1 / 5f, atlas.getRegions());
         animation.setPlayMode(playMode);
 
         time += graphics.getDeltaTime();
