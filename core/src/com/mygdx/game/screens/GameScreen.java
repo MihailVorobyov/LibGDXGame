@@ -14,7 +14,6 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.mygdx.game.CustomAnimation;
@@ -36,6 +35,7 @@ public class GameScreen implements Screen {
     private final PhysX physX;
     private final RectangleMapObject hero;
     private final Body body;
+    private final Vector2 direction;
 
     public GameScreen(Main game) {
         this.game = game;
@@ -65,6 +65,7 @@ public class GameScreen implements Screen {
         for (RectangleMapObject o : impediments) {
             physX.addObject(o, null, o.getName());
         }
+        direction = new Vector2(-1, 0);
     }
 
     @Override
@@ -80,23 +81,19 @@ public class GameScreen implements Screen {
 
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
             xForce = -STEP;
-            if (animation.getFrame().isFlipX()) {
-                flipX = true;
-            }
+            direction.x = -1;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
             xForce = STEP;
-            if (!animation.getFrame().isFlipX()) {
-                flipX = true;
-            }
+            direction.x = 1;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.UP) && Math.abs(body.getLinearVelocity().y) < 0.001f) {
             yForce = STEP * 400;
         }
 
-//        if (animation.getFrame().isFlipX() && body.getLinearVelocity().x < 0.6 || !animation.getFrame().isFlipX() && body.getLinearVelocity().x > 1) {
-//            flipX = true;
-//        }
+        if (animation.getFrame().isFlipX() && direction.x < 0 || !animation.getFrame().isFlipX() && direction.x > 0) {
+            flipX = true;
+        }
 
         body.applyForceToCenter(xForce, yForce, true);
         hero.getRectangle().setCenter(body.getWorldCenter());
@@ -128,7 +125,7 @@ public class GameScreen implements Screen {
 
         physX.step();
         physX.debugDraw(camera);
-        System.out.printf("\n x = %f, y = %f", body.getLinearVelocity().x, body.getLinearVelocity().y);
+        System.out.printf("\n x = %f, y = %f, direction = %s", body.getLinearVelocity().x, body.getLinearVelocity().y, direction);
     }
 
     @Override
