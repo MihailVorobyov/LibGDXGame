@@ -6,15 +6,16 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.mygdx.game.Main;
+import com.mygdx.game.PhysX;
 
 public class GameScreen implements Screen {
     private final Main game;
@@ -25,11 +26,11 @@ public class GameScreen implements Screen {
     private static final float STEP = 2.5f;
     private final TiledMap map;
     private final Rectangle mapSize;
-    private final RectangleMapObject cameraRectangle;
-    private final ShapeRenderer shapeRenderer;
+    private final RectangleMapObject hero;
+//    private final ShapeRenderer shapeRenderer;
     private final int[] bg;
     private final int[] l1;
-    private final Array<RectangleMapObject> impediments;
+    private final PhysX physX;
 
     public GameScreen(Main game) {
         this.game = game;
@@ -44,17 +45,25 @@ public class GameScreen implements Screen {
         bg[0] = map.getLayers().getIndex("фон");
         l1 = new int[1];
         l1[0] = map.getLayers().getIndex("трава");
-        impediments = map.getLayers().get("препятствия").getObjects().getByType(RectangleMapObject.class);
 
-        cameraRectangle = (RectangleMapObject) map.getLayers().get("объекты").getObjects().get("камера");
+        hero = (RectangleMapObject) map.getLayers().get("объекты").getObjects().get("герой");
         mapSize = ((RectangleMapObject) map.getLayers().get("объекты").getObjects().get("граница")).getRectangle();
 
-        camera.position.x = cameraRectangle.getRectangle().getX();
+        camera.position.x = hero.getRectangle().getX();
 
         camera.viewportHeight = mapSize.getHeight();
         camera.viewportWidth = (camera.viewportHeight * 4) / 3.0f;
         camera.position.y = mapSize.getY() + mapSize.getHeight() / 2;
-        shapeRenderer = new ShapeRenderer();
+//        shapeRenderer = new ShapeRenderer();
+        physX = new PhysX();
+
+        Array<RectangleMapObject> impediments = map.getLayers().get("препятствия").getObjects().getByType(RectangleMapObject.class);
+        for (RectangleMapObject o : impediments) {
+            physX.addObject(o, BodyDef.BodyType.StaticBody, o.getName());
+        }
+        physX.addObject(hero, BodyDef.BodyType.DynamicBody, hero.getName());
+
+
     }
 
     @Override
@@ -71,12 +80,12 @@ public class GameScreen implements Screen {
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
             camera.position.x -= STEP;
         }
-        if (Gdx.input.isKeyPressed(Input.Keys.UP) ) {
-            camera.position.y += STEP;
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-            camera.position.y -= STEP;
-        }
+//        if (Gdx.input.isKeyPressed(Input.Keys.UP) ) {
+//            camera.position.y += STEP;
+//        }
+//        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
+//            camera.position.y -= STEP;
+//        }
 
         camera.zoom = mapSize.getHeight() / Gdx.graphics.getHeight();
         camera.update();
@@ -98,17 +107,22 @@ public class GameScreen implements Screen {
             game.setScreen(new MenuScreen(game));
         }
 
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        shapeRenderer.setColor(Color.GOLD);
-        for (RectangleMapObject o : impediments) {
-            Rectangle mapObject = o.getRectangle();
-            shapeRenderer.rect(mapObject.getX(), mapObject.getY(), mapObject.getWidth(), mapObject.getHeight());
-        }
-        shapeRenderer.rect(mapSize.getX(), mapSize.getY(), mapSize.getWidth(), mapSize.getHeight());
-        shapeRenderer.end();
+//        shapeRenderer.setProjectionMatrix(camera.combined);
+//        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+//        shapeRenderer.setColor(Color.GOLD);
+
+//        Array<RectangleMapObject> impediments = map.getLayers().get("препятствия").getObjects().getByType(RectangleMapObject.class);
+//        for (RectangleMapObject o : impediments) {
+//            Rectangle mapObject = o.getRectangle();
+//            shapeRenderer.rect(mapObject.getX(), mapObject.getY(), mapObject.getWidth(), mapObject.getHeight());
+//        }
+//        shapeRenderer.rect(mapSize.getX(), mapSize.getY(), mapSize.getWidth(), mapSize.getHeight());
+//        shapeRenderer.end();
 
         mapRenderer.render(l1);
+
+        physX.step();
+        physX.debugDraw(camera);
     }
 
     @Override
@@ -137,5 +151,6 @@ public class GameScreen implements Screen {
         batch.dispose();
         map.dispose();
 //        animation.dispose();
+        physX.dispose();
     }
 }
